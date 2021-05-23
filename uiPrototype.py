@@ -16,17 +16,39 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
+from matplotlib.figure import Figure
+class PlotCanvas(FigureCanvas):
+    def __init__(self, parent=None, width=500, height=500, dpi=100,graph=None):
+        self.fig = Figure(figsize=(width, height),dpi=dpi)  # Create a Figure. Note: This Figure is a figure under matplotlib, not a figure under matplotlib.pyplot
+        self.axes = self.fig.add_subplot(111)  # Call the add_subplot method under figure, similar to the subplot method under matplotlib.pyplot
+        self.graph = graph
+        self.plot()
+        self.parent=parent
+        FigureCanvas.__init__(self, self.fig)  # Initialize the parent class
+
+
+        self.setParent(parent)
+
+        FigureCanvas.setSizePolicy(self,QSizePolicy.Expanding,QSizePolicy.Expanding)
+        FigureCanvas.updateGeometry(self)
+
+    def plot(self):
+        pos = nx.circular_layout(self.graph, scale=2)  # double distance between all nodes
+        nx.draw(self.graph, pos, node_color='yellow', with_labels=True, arrows=True, arrowsize=15,ax=self.axes)
+
+
 class Ui_MainWindow(object):
     def __init__(self):
         super().__init__()
         self.possibleNodes = list("ABCDEFGHIJKLMNOPRSTUWXYZ")
         self.possibleNodes.reverse()
         self.graph = nx.DiGraph()
-
+        self.graph.add_node("XX")
 
 
 
     def setupUi(self, MainWindow):
+        self.MainWindow=MainWindow
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1280, 720)
         MainWindow.setMinimumSize(QtCore.QSize(1280, 720))
@@ -127,9 +149,9 @@ class Ui_MainWindow(object):
         self.edgesList.setFont(font)
         self.edgesList.setStyleSheet("background-color: rgb(208, 239, 255);")
         self.edgesList.setObjectName("edgesList")
-        self.plotWidget = QtWidgets.QWidget(self.centralwidget)
+        self.plotWidget = PlotCanvas(self.centralwidget,graph=self.graph)
         self.plotWidget.setGeometry(QtCore.QRect(620, 20, 650, 650))
-        self.plotWidget.setStyleSheet("background-color: rgb(208, 239, 255);")
+        # self.plotWidget.setStyleSheet("background-color: rgb(208, 239, 255);")
         self.plotWidget.setObjectName("plotWidget")
         self.arrowLabel = QtWidgets.QLabel(self.centralwidget)
         self.arrowLabel.setGeometry(QtCore.QRect(190, 370, 61, 20))
@@ -207,6 +229,9 @@ class Ui_MainWindow(object):
         item.setTextAlignment(Qt.AlignHCenter)
         self.nodesList.addItem(item)
         self.graph.add_node(text)
+        self.updateGraph()
+        
+
 
     def deleteNode(self):
         if self.nodesList.count() == 0 or self.nodesList.currentItem()==None:
@@ -224,7 +249,7 @@ class Ui_MainWindow(object):
                 edgeNumber-=1
                 deleteList.append((edgeText[1],edgeText[3]))
         self.graph.remove_edges_from(deleteList)
-        print(self.graph.edges)
+
 
 
 
@@ -260,7 +285,7 @@ class Ui_MainWindow(object):
         selected = self.edgesList.currentItem()
         self.edgesList.takeItem(self.edgesList.row(selected))
         self.graph.remove_edges_from([(selected.text()[1],selected.text()[3])])
-        print(self.graph.edges)
+
 
     def clearEdges(self):
         self.edgesList.clear()
@@ -270,6 +295,13 @@ class Ui_MainWindow(object):
         pos = nx.circular_layout(self.graph, scale=2)  # double distance between all nodes
         nx.draw(self.graph, pos, node_color='yellow', with_labels=True, arrows=True, arrowsize=15)
         plt.show()
+
+    def updateGraph(self):
+        self.plotWidget = None
+        self.plotWidget = PlotCanvas(self.centralwidget,graph=self.graph)
+        self.setupUi(self.MainWindow)
+
+
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
