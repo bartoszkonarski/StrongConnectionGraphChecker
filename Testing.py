@@ -216,9 +216,6 @@ class Ui_MainWindow(object):
             error_dialog.exec_()
             return
         text = self.possibleNodes.pop()
-        item = QListWidgetItem(text)
-        item.setTextAlignment(Qt.AlignHCenter)
-        self.nodesList.addItem(item)
         self.graph.add_node(text)
         self.updateGraph()
 
@@ -242,7 +239,6 @@ class Ui_MainWindow(object):
         self.updateGraph()
 
     def clearNodes(self):
-        self.nodesList.clear()
         self.possibleNodes = list("ABCDEFGHIJKLMNOPRSTUWXYZ")
         self.possibleNodes.reverse()
         self.graph.clear()
@@ -257,28 +253,18 @@ class Ui_MainWindow(object):
             error_dialog.setWindowTitle('Błąd')
             error_dialog.setWindowFlags(error_dialog.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
             error_dialog.exec_()
-            self.sourceInput.setText("")
-            self.destinationInput.setText("")
             return
         self.graph.add_edge(sourceNode, destinationNode)
-        text = f'({sourceNode},{destinationNode})'
-        item = QListWidgetItem(text)
-        item.setTextAlignment(Qt.AlignHCenter)
-        self.edgesList.addItem(item)
-        self.sourceInput.setText("")
-        self.destinationInput.setText("")
         self.updateGraph()
 
     def deleteEdge(self):
         if self.edgesList.count() == 0 or self.edgesList.currentItem() == None:
             return
         selected = self.edgesList.currentItem()
-        self.edgesList.takeItem(self.edgesList.row(selected))
         self.graph.remove_edges_from([(selected.text()[1], selected.text()[3])])
         self.updateGraph()
 
     def clearEdges(self):
-        self.edgesList.clear()
         self.graph.clear_edges()
         self.updateGraph()
 
@@ -290,14 +276,17 @@ class Ui_MainWindow(object):
 
     def updateGraph(self):
         self.setupUi(self.MainWindow)
-        for item in list(self.graph.nodes):
-            item = QListWidgetItem(item)
+
+        for node in list(self.graph.nodes):
+            item = QListWidgetItem(node)
+            item.setSizeHint(QSize(250,20))
             item.setTextAlignment(Qt.AlignHCenter)
             self.nodesList.addItem(item)
-        for item in list(self.graph.edges):
-            item = QListWidgetItem(f'({item[0]},{item[1]})')
-            item.setTextAlignment(Qt.AlignHCenter)
-            self.edgesList.addItem(item)
+
+        for edge in list(self.graph.edges):
+            edge = QListWidgetItem(f'({edge[0]},{edge[1]})')
+            edge.setTextAlignment(Qt.AlignHCenter)
+            self.edgesList.addItem(edge)
 
 
 if __name__ == "__main__":
